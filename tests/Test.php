@@ -1,48 +1,86 @@
 <?php
-
-use Map\CSV;
-use Map\Line;
+declare (strict_types = 1);
 
 class Test extends PHPUnit\Framework\TestCase
 {
-    public function testTxt() : void
+    public function testTxt(): void
     {
         $expected = ["Matteo", "è", "un", "grandissimo!"];
-        $actual = (new Line(__DIR__ . "/prova.txt"))->with(function ($line, $idx) {
+        $actual = (new LineMap\Text(__DIR__ . "/prova.txt"))->with(function ($line, $idx) {
             return $line;
-        })->get();
+        })->toArray();
         $this->assertEquals(4, count($actual));
         $this->assertEquals($expected, $actual);
     }
 
-    public function testCsv() : void
+    public function testCsv(): void
     {
         $expected = [["Matteo", "è", "un", "grandissimo!"]];
-        $actual = (new CSV(__DIR__ . "/prova.csv"))->with(function ($row, $idx) {
-            return $row;
-        })->get();
-        $this->assertEquals(1, count($actual));
-        $this->assertEquals($expected, $actual);
+        $rows = (new LineMap\CSV(__DIR__ . "/prova.csv"))->with(function ($row, $idx) {
+            switch ($idx) {
+                case 1:
+                    $this->assertEquals("Matteo", $row["nome"]);
+                    break;
+                case 2:
+                    $this->assertEquals("è", $row["verbo"]);
+                    break;
+                case 3:
+                    $this->assertEquals("un", $row["articolo"]);
+                    break;
+                case 4:
+                    $this->assertEquals("grandissimo!", $row["aggettivo"]);
+                    break;
+                default:
+                    $this->assertTrue(false);
+                    break;
+            }
+            return array_values($row);
+        })->toArray();
+        $this->assertEquals(1, count($rows));
+        $this->assertEquals($expected, $rows);
     }
 
-    public function testCsvHeader() : void
+    public function testCsvHeader(): void
     {
-        $expected = ["Matteo", "è", "un", "grandissimo!"];
-        $actual = (new CSV(__DIR__ . "/prova.csv"))->with(function ($row, $idx) {
+        $expected = ["nome", "verbo", "articolo", "aggettivo"];
+        $actual = (new LineMap\CSV(__DIR__ . "/prova.csv"))->with(function ($row, $idx) {
             return $row;
         })->getHeader();
         $this->assertEquals(4, count($actual));
         $this->assertEquals($expected, $actual);
     }
 
-    public function testExample() : void
+    public function testExample(): void
     {
-        $map = new Map\CSV(__DIR__."/example.csv");
-        $rows = $map->with(function ($row, $idx) {
-            return array_merge([$idx + 1], $row);
-        })->get();
-        $header = $map->getHeader();
+        $map = new LineMap\CSV(__DIR__ . "/example.csv");
+        $header = $map->with(function ($row, $idx) {
+            return $row;
+        })->getHeader();
         $expected = explode(",", "Year,Make,Model,Description,Price");
         $this->assertEquals($expected, $header);
+    }
+
+    public function testExample2() : void
+    {
+        $tpl = "Hello {{name}},
+        your username is {{username}}.";
+        $expected1 = "Hello Matt,
+        your username is mattmezza.";
+        $expected2 = "Hello Mario,
+        your username is m.rossi.";
+        $logs = (new LineMap\CSV(__DIR__ . "/example2.csv"))->with(function($row, $idx, $headers) use ($tpl) {
+            $msg = $tpl;
+            foreach ($headers as $header) {
+                $msg = str_replace("{{".$header."}}", $row[$header], $msg);
+            }
+            return $this->sendEmail($row["email"], $msg);
+        })->toArray();
+        $this->assertEquals($expected1, $logs[0]);
+        $this->assertEquals($expected2, $logs[1]);
+    }
+
+    private function sendEmail($email, $msg) : string
+    {
+        return $msg;
     }
 }

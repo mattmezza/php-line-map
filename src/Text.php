@@ -1,8 +1,9 @@
 <?php
+declare(strict_types=1);
 
-namespace Map;
+namespace LineMap;
 
-class Line implements Map
+class Text implements Map
 {
     private $file;
     private $handle;
@@ -31,7 +32,7 @@ class Line implements Map
         return $this;
     }
 
-    public function get() : array
+    public function toArray() : array
     {
         return $this->lines;
     }

@@ -1,6 +1,6 @@
 <?php
-
-namespace Map;
+declare(strict_types=1);
+namespace LineMap;
 
 class CSV implements Map
 {
@@ -25,9 +25,18 @@ class CSV implements Map
         while (!feof($this->handle)) {
             $row = fgetcsv($this->handle, $this->limit);
             if ($rowNumber === 0) {
+                // getting the header
                 $this->header = $row;
+                // skipping - will not call $func
+                $rowNumber++;
+                continue;
             }
-            $newRow = $func($row, $rowNumber);
+            // setting the associative 
+            $rowAssoc = [];
+            for ($i = 0; $i < count($row); $i++) {
+                $rowAssoc[$this->header[$i]] = $row[$i];
+            }
+            $newRow = $func($rowAssoc, $rowNumber, $this->header);
             if ($newRow) {
                 $this->rows[] = $newRow;                
             }
@@ -41,7 +50,7 @@ class CSV implements Map
         return $this->header;
     }
 
-    public function get() : array
+    public function toArray() : array
     {
         return $this->rows;
     }
