@@ -20,7 +20,7 @@ $header = $map->getHeader();
 or
 
 ```php
-(new Line("lines.txt"))->with(function ($line, $idx) {
+(new LineMap\Txt("lines.txt"))->with(function ($line, $idx) {
     echo "$idx: $line";
 });
 ```
@@ -49,7 +49,7 @@ your username is __username__.";
 $logs = (new LineMap\CSV("file.csv"))->with(function($row, $idx, $headers) use ($tpl) {
     $msg = $tpl;
     foreach ($headers as $header) {
-        $msg = str_replace("{{$header}}", $row[$header], $msg);
+        $msg = str_replace("{{".$header."}}", $row[$header], $msg);
     }
     return sendMail($row["email"]);
 })->toArray();
