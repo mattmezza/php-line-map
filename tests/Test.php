@@ -6,7 +6,28 @@ class Test extends PHPUnit\Framework\TestCase
     public function testTxt(): void
     {
         $expected = ["Matteo", "è", "un", "grandissimo!"];
-        $actual = (new LineMap\Text(__DIR__ . "/prova.txt"))->with(function ($line, $idx) {
+        $actual = Map\Text::fileNamed(__DIR__ . "/prova.txt")->with(function ($line, $idx) {
+            return $line;
+        })->toArray();
+        $this->assertEquals(4, count($actual));
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testTxtFilename(): void
+    {
+        $expected = ["Matteo", "è", "un", "grandissimo!"];
+        $actual = Map\Text::file(fopen(__DIR__ . "/prova.txt", "r"))->with(function ($line, $idx) {
+            return $line;
+        })->toArray();
+        $this->assertEquals(4, count($actual));
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testTxtString(): void
+    {
+        $expected = ["Matteo", "è", "un", "grandissimo!"];
+        $string = "Matteo\nè\nun\ngrandissimo!";
+        $actual = Map\Text::string($string)->with(function ($line, $idx) {
             return $line;
         })->toArray();
         $this->assertEquals(4, count($actual));
@@ -16,7 +37,7 @@ class Test extends PHPUnit\Framework\TestCase
     public function testCsv(): void
     {
         $expected = [["Matteo", "è", "un", "grandissimo!"]];
-        $rows = (new LineMap\CSV(__DIR__ . "/prova.csv"))->with(function ($row, $idx) {
+        $rows = Map\CSV::fileNamed(__DIR__ . "/prova.csv")->with(function ($row, $idx) {
             switch ($idx) {
                 case 1:
                     $this->assertEquals("Matteo", $row["nome"]);
@@ -43,7 +64,28 @@ class Test extends PHPUnit\Framework\TestCase
     public function testCsvHeader(): void
     {
         $expected = ["nome", "verbo", "articolo", "aggettivo"];
-        $actual = (new LineMap\CSV(__DIR__ . "/prova.csv"))->with(function ($row, $idx) {
+        $actual = Map\CSV::fileNamed(__DIR__ . "/prova.csv")->with(function ($row, $idx) {
+            return $row;
+        })->getHeader();
+        $this->assertEquals(4, count($actual));
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testCsvHeaderFile(): void
+    {
+        $expected = ["nome", "verbo", "articolo", "aggettivo"];
+        $actual = Map\CSV::file(fopen(__DIR__ . "/prova.csv", "r"))->with(function ($row, $idx) {
+            return $row;
+        })->getHeader();
+        $this->assertEquals(4, count($actual));
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testCsvHeaderString(): void
+    {
+        $string = "nome,verbo,articolo,aggettivo\nMatteo,è,un,grandissimo!";
+        $expected = ["nome", "verbo", "articolo", "aggettivo"];
+        $actual = Map\CSV::string($string)->with(function($row, $idx) {
             return $row;
         })->getHeader();
         $this->assertEquals(4, count($actual));
@@ -52,7 +94,7 @@ class Test extends PHPUnit\Framework\TestCase
 
     public function testExample(): void
     {
-        $map = new LineMap\CSV(__DIR__ . "/example.csv");
+        $map = Map\CSV::fileNamed(__DIR__ . "/example.csv");
         $header = $map->with(function ($row, $idx) {
             return $row;
         })->getHeader();
@@ -68,7 +110,7 @@ class Test extends PHPUnit\Framework\TestCase
         your username is mattmezza.";
         $expected2 = "Hello Mario,
         your username is m.rossi.";
-        $logs = (new LineMap\CSV(__DIR__ . "/example2.csv"))->with(function($row, $idx, $headers) use ($tpl) {
+        $logs = Map\CSV::fileNamed(__DIR__ . "/example2.csv")->with(function($row, $idx, $headers) use ($tpl) {
             $msg = $tpl;
             foreach ($headers as $header) {
                 $msg = str_replace("{{".$header."}}", $row[$header], $msg);
