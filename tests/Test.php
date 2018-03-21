@@ -125,4 +125,21 @@ class Test extends PHPUnit\Framework\TestCase
     {
         return $msg;
     }
+
+    public function testTSV() : void
+    {
+        $tpl = "Ciao __name__, il tuo username è __username__, la tua password __password__.";
+        $tsv = "mobile	name	username	password
++393409341277	Matteo	mattmezza	DioCancaro
++39333333333	Joseph	j.nazaret	Jesus33";
+        $messages = Map\CSV::string($tsv, 2048, "\t")->with(function($row, $idx, $headers) use($tpl) {
+            $msg = $tpl;
+            foreach ($headers as $key => $header) {
+                $msg = str_replace("__".$header."__", $row[$header], $msg);
+            }
+            // $messages[] = ["to"=>$row["mobile"],"msg"=>$msg];
+            return $msg;
+        })->toArray();
+        $this->assertEquals("Ciao Matteo, il tuo username è mattmezza, la tua password DioCancaro.", $messages[0]);
+    }
 }

@@ -78,7 +78,7 @@ class CSV implements Map
                     }
                     $newRow = $csvEachRow($rowAssoc, $number, $this->header);
                     return $newRow;
-                });
+                })->toArray();
         }
         return $this;
     }
